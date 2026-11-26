@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Eco Drop RVM Station
+Comment=Aqlli Eko-Qabul Qilish Stansiyasi Kioski
+Exec=/home/pi/ecoproject/rpi_rvm/run_kiosk.sh
+Icon=utilities-terminal
+Path=/home/pi/ecoproject/rpi_rvm
+Terminal=false
+StartupNotify=false
+Categories=Utility;Application;

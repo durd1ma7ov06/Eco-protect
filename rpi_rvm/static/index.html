@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>EcoProject - Smart RVM Kiosk (10-inch Edition)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap');
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    body {
+      background: radial-gradient(circle at 50% 0%, #FFFFFF 0%, #F5F8F5 45%, #E9EFE9 100%);
+      overflow: hidden;
+      min-height: 100vh;
+    }
+    .kiosk-card {
+      background: #FFFFFF;
+      border: 3px solid rgba(16, 185, 129, 0.22);
+      box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9);
+    }
+    .glow-giant {
+      box-shadow: 0 20px 45px -5px rgba(16, 185, 129, 0.35);
+    }
+    .glow-card {
+      box-shadow: 0 16px 36px -6px rgba(16, 185, 129, 0.25);
+    }
+    .pulse-glow {
+      animation: pulse-glow 2.5s infinite;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4)); }
+      50% { transform: scale(1.03); filter: drop-shadow(0 0 28px rgba(16, 185, 129, 0.65)); }
+    }
+    .numpad-btn {
+      transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .numpad-btn:active {
+      transform: scale(0.92);
+      background-color: #E2E8F0 !important;
+    }
+  </style>
+</head>
+<body class="text-slate-900 flex flex-col justify-between p-6 md:p-8 select-none">
+
+  <!-- ================= TOP HEADER (CLEAN & BOLD FOR 10-INCH) ================= -->
+  <header class="flex justify-between items-center bg-white/95 backdrop-blur-md px-8 py-5 rounded-3xl border-3 border-slate-200/90 shadow-md">
+    <!-- Brand -->
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-3xl shadow-lg shadow-emerald-600/30">
+        <i class="ph-bold ph-leaf"></i>
+      </div>
+      <div>
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900">
+          EcoProject
+        </h1>
+      </div>
+    </div>
+
+    <!-- Live Status & Clock -->
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-emerald-50 border-2 border-emerald-200">
+        <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 animate-pulse" id="statusDot"></span>
+        <span class="text-xl font-black text-emerald-800" id="statusText">Faol</span>
+      </div>
+      <div class="text-3xl font-black text-slate-900 tracking-wider font-mono" id="digitalClock">--:--</div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN VIEWPORT ================= -->
+  <main class="flex-1 flex items-center justify-center my-6 relative">
+
+    <!-- ---------------- 1. IDLE / WELCOME SCREEN ---------------- -->
+    <div id="screenIdle" class="flex flex-col items-center text-center max-w-4xl transition-all duration-300">
+      
+      <!-- Big Visual Title -->
+      <div class="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-xl mb-6 border border-emerald-300">
+        <i class="ph-bold ph-sparkle text-2xl"></i>
+        <span>Aqlli Qayta Ishlash Stansiyasi</span>
+      </div>
+
+      <h2 class="text-5xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
+        Tabiatni Birgalikda Asraymiz! 🌱
+      </h2>
+      
+      <p class="text-2xl md:text-3xl text-slate-700 mb-12 font-extrabold max-w-2xl leading-relaxed">
+        Plastik baklashka va bankalarni topshiring, keshbek oling!
+      </p>
+
+      <!-- DISTINCT MODERN MASTER START BUTTON -->
+      <button onclick="showModeSelection()" class="group relative px-14 py-8 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white rounded-3xl shadow-2xl glow-giant transition-all active:scale-95 flex items-center gap-6 border-3 border-emerald-300/40 cursor-pointer pulse-glow">
+        <div class="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-5xl group-hover:rotate-12 transition-transform">
+          <i class="ph-bold ph-hand-tap"></i>
+        </div>
+        <div class="text-left">
+          <span class="block text-3xl md:text-4xl font-black tracking-wide">BOSHLASH UCHUN BOSING</span>
+          <span class="block text-xl font-bold text-emerald-100 mt-0.5">Ekranga teging va topshiring</span>
+        </div>
+        <div class="w-14 h-14 rounded-2xl bg-white text-emerald-600 flex items-center justify-center text-3xl shadow-md group-hover:translate-x-2 transition-transform">
+          <i class="ph-bold ph-arrow-right"></i>
+        </div>
+      </button>
+
+    </div>
+
+    <!-- ---------------- 2. MODE SELECTION SCREEN ---------------- -->
+    <div id="screenMode" class="hidden grid grid-cols-2 gap-8 w-full max-w-5xl transition-all duration-300">
+      
+      <!-- Option 1: Ekologiyaga -->
+      <button onclick="chooseMode('ECOLOGY')" class="group relative kiosk-card hover:border-emerald-500 rounded-3xl p-10 flex flex-col items-center text-center transition-all duration-200 shadow-md hover:shadow-2xl active:scale-95 cursor-pointer">
+        <div class="w-24 h-24 rounded-3xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-6xl mb-6 group-hover:scale-105 transition-transform border-3 border-emerald-300">
+          <i class="ph-fill ph-heart"></i>
+        </div>
+        <h3 class="text-4xl font-black text-slate-900 mb-4">Ekologiyaga</h3>
+        <p class="text-slate-600 text-2xl font-bold mb-8 leading-snug">
+          Mablag' universitet hududini ko'kalamzorlashtirish fondiga yo'naltiriladi.
+        </p>
+        <span class="mt-auto w-full py-5 rounded-2xl bg-emerald-50 text-emerald-800 font-black text-2xl border-2 border-emerald-300 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+          Tabiat uchun xayriya
+        </span>
+      </button>
+
+      <!-- Option 2: O'zimga (Keshbek) -->
+      <button onclick="chooseMode('CASHBACK')" class="group relative kiosk-card hover:border-blue-500 rounded-3xl p-10 flex flex-col items-center text-center transition-all duration-200 shadow-md hover:shadow-2xl active:scale-95 cursor-pointer">
+        <div class="w-24 h-24 rounded-3xl bg-blue-100 text-blue-700 flex items-center justify-center text-6xl mb-6 group-hover:scale-105 transition-transform border-3 border-blue-300">
+          <i class="ph-fill ph-wallet"></i>
+        </div>
+        <h3 class="text-4xl font-black text-slate-900 mb-4">O'zimga (Keshbek)</h3>
+        <p class="text-slate-600 text-2xl font-bold mb-8 leading-snug">
+          Har bir idish uchun pul to'planadi. Raqam yoki QR orqali oling.
+        </p>
+        <span class="mt-auto w-full py-5 rounded-2xl bg-blue-50 text-blue-800 font-black text-2xl border-2 border-blue-300 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+          Keshbek olish
+        </span>
+      </button>
+
+    </div>
+
+    <!-- ---------------- 3. ACCEPTING SCREEN (REAL ICONS & BIG NUMBERS) ---------------- -->
+    <div id="screenAccepting" class="hidden flex flex-col items-center w-full max-w-5xl transition-all duration-300">
+      
+      <!-- Status Banner -->
+      <div class="w-full kiosk-card rounded-3xl px-8 py-4 flex items-center justify-between mb-6 shadow-sm">
+        <div class="flex items-center gap-4">
+          <div class="w-5 h-5 rounded-full bg-emerald-500 animate-ping"></div>
+          <span class="text-2xl md:text-3xl font-black text-emerald-900" id="acceptingStatusMsg">Idishni qabul oynasiga soling...</span>
+        </div>
+        <div class="text-xl px-6 py-2.5 rounded-2xl bg-slate-100 font-black text-slate-800 border border-slate-300" id="currentModeBadge">
+          Keshbek rejimi
+        </div>
+      </div>
+
+      <!-- Giant Counters Grid (3-column) -->
+      <div class="grid grid-cols-3 gap-6 w-full mb-8">
+        
+        <!-- Plastic Bottle Card (Guaranteed SVG Icon) -->
+        <div class="kiosk-card rounded-3xl p-6 flex flex-col items-center">
+          <div class="w-20 h-20 rounded-3xl bg-teal-50 text-teal-600 flex items-center justify-center mb-3 border-2 border-teal-200">
+            <svg class="w-12 h-12 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 2h4M10 5h4M9 8h6M8 11a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-2a3 3 0 0 1-3-3v-9z"/>
+              <path d="M12 12v4"/>
+            </svg>
+          </div>
+          <span class="text-slate-600 font-black text-xl mb-1">Plastik Baklashka</span>
+          <span class="text-7xl md:text-8xl font-black text-slate-900 tracking-tight" id="bottleCount">0</span>
+        </div>
+
+        <!-- Can Card (Guaranteed SVG Icon) -->
+        <div class="kiosk-card rounded-3xl p-6 flex flex-col items-center">
+          <div class="w-20 h-20 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 border-2 border-amber-200">
+            <svg class="w-12 h-12 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="6" ry="3"/>
+              <path d="M6 5v14c0 1.66 2.69 3 6 3s6-1.34 6-3V5"/>
+              <ellipse cx="12" cy="12" rx="6" ry="2" stroke-dasharray="2 2"/>
+            </svg>
+          </div>
+          <span class="text-slate-600 font-black text-xl mb-1">Alyuminiy Banka</span>
+          <span class="text-7xl md:text-8xl font-black text-slate-900 tracking-tight" id="canCount">0</span>
+        </div>
+
+        <!-- Total Cashback Card (Giant Highlight) -->
+        <div class="kiosk-card rounded-3xl p-6 flex flex-col items-center border-emerald-400 glow-card bg-gradient-to-br from-white to-emerald-50/70">
+          <div class="w-20 h-20 rounded-3xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-4xl mb-3">
+            <i class="ph-bold ph-coins"></i>
+          </div>
+          <span class="text-emerald-800 font-black text-xl mb-1">Jami Keshbek</span>
+          <div class="flex items-baseline gap-2">
+            <span class="text-7xl md:text-8xl font-black text-emerald-600 tracking-tight" id="totalAmount">0</span>
+            <span class="text-3xl font-black text-emerald-700">so'm</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-6 w-full">
+        <button onclick="finishSession()" class="flex-1 py-7 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-3xl rounded-3xl shadow-2xl glow-giant active:scale-98 transition-all flex items-center justify-center gap-4 cursor-pointer">
+          <i class="ph-bold ph-check-circle text-4xl"></i>
+          <span>TUGATISH VA KESHBEK OLISH</span>
+        </button>
+        <button onclick="resetSession()" class="px-10 py-7 bg-white hover:bg-slate-100 text-slate-700 font-black text-2xl rounded-3xl border-3 border-slate-300 active:scale-95 transition-all cursor-pointer">
+          Bekor qilish
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ---------------- 4. COMPLETION SCREEN (2-COLUMN LANDSCAPE LAYOUT) ---------------- -->
+    <div id="screenCompleted" class="hidden w-full max-w-6xl transition-all duration-300">
+      
+      <!-- CASHBACK CLAIM CONTAINER (2-COLUMNS: LEFT = NUMPAD, RIGHT = SUMMARY & QR) -->
+      <div id="cashbackChoiceContainer" class="w-full">
+        
+        <div class="grid grid-cols-12 gap-8 items-stretch">
+          
+          <!-- LEFT COLUMN: PHONE DISPLAY & GIANT TOUCH NUMPAD (COL 1-7) -->
+          <div class="col-span-7 flex flex-col justify-between kiosk-card rounded-3xl p-7 shadow-lg">
+            
+            <!-- Phone Display Box (Huge Monospaced Display) -->
+            <div class="w-full bg-slate-50 border-4 border-emerald-500 rounded-3xl p-5 mb-5 text-center shadow-inner">
+              <span class="text-lg font-black text-slate-500 block mb-1 uppercase tracking-wider">Telefon Raqamingizni Kiriting:</span>
+              <span class="text-4xl md:text-5xl font-mono font-black text-slate-900 tracking-wider" id="phoneInputDisplay">
+                +998 (__) ___-__-__
+              </span>
+            </div>
+
+            <!-- Giant Touch NumPad Grid (3x4) -->
+            <div class="grid grid-cols-3 gap-4 w-full flex-1">
+              <button onclick="pressKey('1')" class="numpad-btn h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-4xl font-black text-slate-900 border-2 border-slate-300 shadow-sm flex items-center justify-center cursor-pointer">1</button>
+              <button onclick="pressKey('2')" class="numpad-btn h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-4xl font-black text-slate-900 border-2 border-slate-300 shadow-sm flex items-center justify-center cursor-pointer">2</button>
+              <button onclick="pressKey('3')" class="numpad-btn h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-4xl font-black text-slate-900 border-2 border-slate-300 shadow-sm flex items-center justify-center cursor-pointer">3</button>
+              
+              <button onclick="pressKey('4')" class="numpad-btn h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-4xl font-black text-slate-900 border-2 border-slate-300 shadow-sm flex items-center justify-center cursor-pointer">4</button>
+              <button onclick="pressKey('5')" class="numpad-btn h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-4xl font-black text-slate-900 border-2 border-slate-300 shadow-sm flex items-center justify-center cursor-pointer">5</button>
+              <button onclick="pressKey('6')" class="numpad-btn h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-4xl font-black text-slate-900 border-2 border-slate-300 shadow-sm flex items-center justify-center cursor-pointer">6</button>
+              
+              <button onclick="pressKey('7')" class="numpad-btn h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-4xl font-black text-slate-900 border-2 border-slate-300 shadow-sm flex items-center justify-center cursor-pointer">7</button>
+              <button onclick="pressKey('8')" class="numpad-btn h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-4xl font-black text-slate-900 border-2 border-slate-300 shadow-sm flex items-center justify-center cursor-pointer">8</button>
+              <button onclick="pressKey('9')" class="numpad-btn h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-4xl font-black text-slate-900 border-2 border-slate-300 shadow-sm flex items-center justify-center cursor-pointer">9</button>
+              
+              <button onclick="pressClear()" class="numpad-btn h-20 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-2xl text-3xl font-black border-2 border-rose-200 shadow-sm flex items-center justify-center cursor-pointer">C</button>
+              <button onclick="pressKey('0')" class="numpad-btn h-20 bg-slate-100 hover:bg-slate-200 rounded-2xl text-4xl font-black text-slate-900 border-2 border-slate-300 shadow-sm flex items-center justify-center cursor-pointer">0</button>
+              <button onclick="pressBackspace()" class="numpad-btn h-20 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-2xl text-4xl font-black border-2 border-amber-200 shadow-sm flex items-center justify-center cursor-pointer">
+                <i class="ph-bold ph-backspace"></i>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN: SUMMARY, QR OPTION & ACTIONS (COL 8-12) -->
+          <div class="col-span-5 flex flex-col justify-between kiosk-card rounded-3xl p-7 shadow-lg">
+            
+            <!-- Cashback Summary Display -->
+            <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white text-center shadow-lg">
+              <span class="text-xl font-bold text-emerald-100 block mb-1">To'plangan Keshbek:</span>
+              <div class="flex items-baseline justify-center gap-2">
+                <span class="text-6xl font-black tracking-tight" id="finalEarnedAmount">0</span>
+                <span class="text-3xl font-extrabold text-emerald-100">so'm</span>
+              </div>
+            </div>
+
+            <!-- Tab Switcher: Phone vs QR -->
+            <div class="flex items-center gap-3 my-4 bg-slate-100 p-2 rounded-2xl border-2 border-slate-200">
+              <button id="tabPhoneBtn" onclick="switchCashbackTab('PHONE')" class="flex-1 py-4 rounded-xl font-black text-xl flex items-center justify-center gap-2 transition-all bg-emerald-600 text-white shadow-md cursor-pointer">
+                <i class="ph-bold ph-phone text-2xl"></i>
+                <span>Raqam orqali</span>
+              </button>
+              <button id="tabQrBtn" onclick="switchCashbackTab('QR')" class="flex-1 py-4 rounded-xl font-black text-xl flex items-center justify-center gap-2 transition-all text-slate-600 hover:text-slate-900 cursor-pointer">
+                <i class="ph-bold ph-qr-code text-2xl"></i>
+                <span>QR Kod orqali</span>
+              </button>
+            </div>
+
+            <!-- Dynamic Tab Content -->
+            <!-- 1. Phone Confirmation Action -->
+            <div id="tabPhoneContent" class="flex flex-col gap-4">
+              <button id="submitPhoneBtn" onclick="submitPhoneClaim()" class="w-full py-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-3xl rounded-2xl shadow-xl glow-giant active:scale-98 transition-all flex items-center justify-center gap-3 cursor-pointer">
+                <i class="ph-bold ph-check text-4xl"></i>
+                <span>KESHBEKNI OLISH</span>
+              </button>
+              
+              <button onclick="resetSession()" class="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-xl rounded-2xl border-2 border-slate-300 active:scale-95 transition-all cursor-pointer">
+                Bosh sahifaga qaytish
+              </button>
+            </div>
+
+            <!-- 2. QR Code Content -->
+            <div id="tabQrContent" class="hidden flex flex-col items-center">
+              <div class="bg-white p-4 rounded-2xl shadow-md border-2 border-slate-200 mb-3">
+                <div id="qrcode" class="w-56 h-56 flex items-center justify-center"></div>
+              </div>
+              <p class="text-xl font-black text-slate-800 mb-1">EcoProject ilovasida skanerlang</p>
+              <p class="text-lg text-slate-500 font-bold mb-3">Muddati: <span id="countdownTimer" class="font-black text-amber-600">90</span>s</p>
+              <button onclick="resetSession()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-lg rounded-xl border border-slate-300 cursor-pointer">
+                Yakunlash
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- SUCCESS MODAL (PHONE CLAIMED) -->
+      <div id="phoneSuccessModal" class="hidden flex flex-col items-center justify-center text-center py-10 kiosk-card rounded-3xl p-10 max-w-3xl mx-auto shadow-2xl">
+        <div class="w-28 h-28 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-7xl mb-6">
+          <i class="ph-bold ph-check-circle"></i>
+        </div>
+        <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-3">Muvaffaqiyatli O'tkazildi! 🎉</h2>
+        <p class="text-4xl text-emerald-600 font-black mb-2" id="successAmountText">+500 so'm</p>
+        <p class="text-2xl text-slate-700 font-bold mb-8">Mablag' <span class="font-black text-slate-900" id="successPhoneText">+998 (90) 123-45-67</span> hisobiga yuborildi.</p>
+        <button onclick="resetSession()" class="px-12 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl rounded-2xl shadow-xl cursor-pointer">
+          Bosh sahifaga qaytish
+        </button>
+      </div>
+
+      <!-- ECOLOGY THANK YOU -->
+      <div id="ecologyThankYouContainer" class="hidden flex flex-col items-center justify-center text-center py-10 kiosk-card rounded-3xl p-10 max-w-3xl mx-auto shadow-2xl">
+        <div class="w-28 h-28 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-7xl mb-6">
+          <i class="ph-fill ph-heart"></i>
+        </div>
+        <h2 class="text-4xl md:text-5xl font-black text-slate-900 mb-4">Katta Rahmat! 🌍</h2>
+        <p class="text-2xl text-slate-700 font-bold mb-8 max-w-xl leading-relaxed">
+          Siz tabiatni toza saqlashga munosib hissa qo'shdingiz! Har bir topshirilgan idish kelajagimiz uchun muhim.
+        </p>
+        <button onclick="resetSession()" class="px-12 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl rounded-2xl shadow-xl cursor-pointer">
+          Bosh sahifaga qaytish
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq = 600, duration = 0.08) {
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e) {}
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('digitalClock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    let ws = null;
+    let qrCountdownInterval = null;
+    let enteredPhoneDigits = "";
+
+    function connectWS() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        document.getElementById('statusDot').className = "w-3.5 h-3.5 rounded-full bg-emerald-500 animate-pulse";
+        document.getElementById('statusText').innerText = "Faol";
+      };
+
+      ws.onclose = () => {
+        document.getElementById('statusDot').className = "w-3.5 h-3.5 rounded-full bg-rose-500";
+        document.getElementById('statusText').innerText = "Ulanmoqda...";
+        setTimeout(connectWS, 2000);
+      };
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.event === "STATE_UPDATE") {
+          applyState(msg.data);
+        } else if (msg.event === "ITEM_DETECTED") {
+          playBeep(880, 0.15);
+          document.getElementById('acceptingStatusMsg').innerText = `Aniqlangan idish qabul qilinmoqda...`;
+        } else if (msg.event === "ITEM_ACCEPTED") {
+          playBeep(1200, 0.2);
+          confetti({ particleCount: 50, spread: 70, origin: { y: 0.8 } });
+          document.getElementById('acceptingStatusMsg').innerText = "Idish qabul qilindi! Keyingisini qo'ying...";
+        } else if (msg.event === "ITEM_REJECTED") {
+          playBeep(250, 0.25);
+          const statusElem = document.getElementById('acceptingStatusMsg');
+          statusElem.innerText = "❌ Noma'lum buyum! Faqat baklashka yoki banka soling.";
+          statusElem.className = "text-2xl md:text-3xl font-black text-rose-600";
+          setTimeout(() => {
+            statusElem.innerText = "Idishni qabul oynasiga soling...";
+            statusElem.className = "text-2xl md:text-3xl font-black text-emerald-900";
+          }, 3000);
+        } else if (msg.event === "PHONE_CLAIMED") {
+          showPhoneSuccess(msg.phone, msg.amount);
+        }
+      };
+    }
+    connectWS();
+
+    function hideAllScreens() {
+      document.getElementById('screenIdle').classList.add('hidden');
+      document.getElementById('screenMode').classList.add('hidden');
+      document.getElementById('screenAccepting').classList.add('hidden');
+      document.getElementById('screenCompleted').classList.add('hidden');
+    }
+
+    function showModeSelection() {
+      playBeep(500, 0.1);
+      hideAllScreens();
+      document.getElementById('screenMode').classList.remove('hidden');
+    }
+
+    function chooseMode(mode) {
+      playBeep(700, 0.1);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: "START_SESSION", mode: mode }));
+      }
+    }
+
+    function finishSession() {
+      playBeep(900, 0.2);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: "FINISH_SESSION" }));
+      }
+    }
+
+    function resetSession() {
+      enteredPhoneDigits = "";
+      updatePhoneDisplay();
+      if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: "RESET" }));
+      }
+    }
+
+    function updatePhoneDisplay() {
+      const d = enteredPhoneDigits;
+      let formatted = "+998 ";
+      const p1 = d.substring(0, 2).padEnd(2, '_');
+      const p2 = d.substring(2, 5).padEnd(3, '_');
+      const p3 = d.substring(5, 7).padEnd(2, '_');
+      const p4 = d.substring(7, 9).padEnd(2, '_');
+      formatted += `(${p1}) ${p2}-${p3}-${p4}`;
+      document.getElementById('phoneInputDisplay').innerText = formatted;
+    }
+
+    function pressKey(digit) {
+      playBeep(800, 0.05);
+      if (enteredPhoneDigits.length < 9) {
+        enteredPhoneDigits += digit;
+        updatePhoneDisplay();
+      }
+    }
+
+    function pressBackspace() {
+      playBeep(400, 0.05);
+      if (enteredPhoneDigits.length > 0) {
+        enteredPhoneDigits = enteredPhoneDigits.slice(0, -1);
+        updatePhoneDisplay();
+      }
+    }
+
+    function pressClear() {
+      playBeep(300, 0.1);
+      enteredPhoneDigits = "";
+      updatePhoneDisplay();
+    }
+
+    function submitPhoneClaim() {
+      if (enteredPhoneDigits.length < 9) {
+        playBeep(250, 0.3);
+        alert("Iltimos, to'liq 9 ta raqamni kiriting!");
+        return;
+      }
+      playBeep(1100, 0.2);
+      const fullPhone = `+998${enteredPhoneDigits}`;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: "CLAIM_PHONE", phone: fullPhone }));
+      }
+    }
+
+    function showPhoneSuccess(phone, amount) {
+      playBeep(1300, 0.3);
+      confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+      document.getElementById('cashbackChoiceContainer').classList.add('hidden');
+      document.getElementById('phoneSuccessModal').classList.remove('hidden');
+      document.getElementById('successAmountText').innerText = `+${amount || document.getElementById('finalEarnedAmount').innerText} so'm`;
+      document.getElementById('successPhoneText').innerText = phone;
+      
+      setTimeout(() => {
+        resetSession();
+      }, 2500);
+    }
+
+    function switchCashbackTab(tab) {
+      playBeep(650, 0.08);
+      const phoneBtn = document.getElementById('tabPhoneBtn');
+      const qrBtn = document.getElementById('tabQrBtn');
+      const phoneContent = document.getElementById('tabPhoneContent');
+      const qrContent = document.getElementById('tabQrContent');
+
+      if (tab === 'PHONE') {
+        phoneBtn.className = "flex-1 py-4 rounded-xl font-black text-xl flex items-center justify-center gap-2 transition-all bg-emerald-600 text-white shadow-md cursor-pointer";
+        qrBtn.className = "flex-1 py-4 rounded-xl font-black text-xl flex items-center justify-center gap-2 transition-all text-slate-600 hover:text-slate-900 cursor-pointer";
+        phoneContent.classList.remove('hidden');
+        qrContent.classList.add('hidden');
+      } else {
+        qrBtn.className = "flex-1 py-4 rounded-xl font-black text-xl flex items-center justify-center gap-2 transition-all bg-emerald-600 text-white shadow-md cursor-pointer";
+        phoneBtn.className = "flex-1 py-4 rounded-xl font-black text-xl flex items-center justify-center gap-2 transition-all text-slate-600 hover:text-slate-900 cursor-pointer";
+        phoneContent.classList.add('hidden');
+        qrContent.classList.remove('hidden');
+      }
+    }
+
+    function applyState(data) {
+      document.getElementById('bottleCount').innerText = data.bottles;
+      document.getElementById('canCount').innerText = data.cans;
+      document.getElementById('totalAmount').innerText = data.total_amount;
+
+      if (data.state === "IDLE") {
+        hideAllScreens();
+        document.getElementById('screenIdle').classList.remove('hidden');
+        if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+      } 
+      else if (data.state === "ACCEPTING") {
+        hideAllScreens();
+        document.getElementById('screenAccepting').classList.remove('hidden');
+        document.getElementById('currentModeBadge').innerText = data.mode === "ECOLOGY" ? "Ekologiyaga (Xayriya)" : "Keshbek rejimi";
+      } 
+      else if (data.state === "COMPLETED") {
+        hideAllScreens();
+        document.getElementById('screenCompleted').classList.remove('hidden');
+
+        if (data.mode === "ECOLOGY") {
+          document.getElementById('ecologyThankYouContainer').classList.remove('hidden');
+          document.getElementById('cashbackChoiceContainer').classList.add('hidden');
+          document.getElementById('phoneSuccessModal').classList.add('hidden');
+          confetti({ particleCount: 120, spread: 100, origin: { y: 0.6 } });
+          setTimeout(resetSession, 8000);
+        } else {
+          document.getElementById('ecologyThankYouContainer').classList.add('hidden');
+          document.getElementById('phoneSuccessModal').classList.add('hidden');
+          document.getElementById('cashbackChoiceContainer').classList.remove('hidden');
+          document.getElementById('finalEarnedAmount').innerText = data.total_amount;
+
+          switchCashbackTab('PHONE');
+          enteredPhoneDigits = "";
+          updatePhoneDisplay();
+
+          // QR Kod (224x224 px)
+          const qrContainer = document.getElementById('qrcode');
+          qrContainer.innerHTML = "";
+          if (data.qr_image) {
+            qrContainer.innerHTML = `<img src="${data.qr_image}" class="w-full h-full object-contain" alt="QR Code">`;
+          } else if (data.qr_data) {
+            new QRCode(qrContainer, {
+              text: data.qr_data,
+              width: 224,
+              height: 224,
+              colorDark: "#059669",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          }
+
+          let timeLeft = data.qr_exp_seconds || 90;
+          document.getElementById('countdownTimer').innerText = timeLeft;
+          if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+          qrCountdownInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('countdownTimer').innerText = timeLeft;
+            if (timeLeft <= 0) {
+              clearInterval(qrCountdownInterval);
+              resetSession();
+            }
+          }, 1000);
+        }
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+[Unit]
+Description=Smart Eco RVM Reverse Vending Machine Service
+After=network.target pigpiod.service
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/ecoproject/rpi_rvm
+ExecStart=/home/pi/ecoproject/rpi_rvm/venv/bin/python3 -m uvicorn server:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,59 @@
+# ==============================================================================
+# EcoProject .gitignore
+# ==============================================================================
+
+# --- Secrets, Credentials & Tokens ---
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.crt
+credentials.json
+client_secret*.json
+google-services.json
+auth_token*
+*secret*
+*token*
+!core/security.py
+
+# --- Flutter / Dart Build & Cache ---
+**/eco_mobile_app/.dart_tool/
+**/eco_mobile_app/build/
+**/eco_mobile_app/.flutter-plugins
+**/eco_mobile_app/.flutter-plugins-dependencies
+**/eco_mobile_app/android/.gradle/
+**/eco_mobile_app/android/local.properties
+**/eco_mobile_app/android/app/debug/
+**/eco_mobile_app/android/app/profile/
+**/eco_mobile_app/android/app/release/
+**/eco_mobile_app/ios/Flutter/ephemeral/
+**/eco_mobile_app/macos/Flutter/ephemeral/
+**/eco_mobile_app/windows/flutter/ephemeral/
+**/eco_mobile_app/linux/flutter/ephemeral/
+**/eco_mobile_app/.packages
+**/eco_mobile_app/.pub/
+**/eco_mobile_app/.pub-cache/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.pytest_cache/
+*.log
+
+# --- IDEs & System Files ---
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Root Temporary Files ---
+/yolov8n.pt
